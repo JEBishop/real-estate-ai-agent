@@ -42,10 +42,10 @@ try {
         new HumanMessage(`
           You are an expert real estate agent. You are being tasked with helping a client find a new place to live.
 
-          STEP 1: Determine the zip code to search within from the user's request: ${realEstateRequest}
+          STEP 1: Determine the 1-3 zip codes to search within from the user's request: ${realEstateRequest}
           - The user may provide a city, state, or a zip code.
           - If a zip code is provided, use it directly.
-          - If only a city and state are provided, determine the most relevant zip code based on market demand, availability, or other key factors.
+          - If only a city and state are provided, determine the most relevant zip codes based on market demand, availability, or other key factors.
           - Store this value as 'zipCode' for the next step.
           - Do NOT output anything.
 
