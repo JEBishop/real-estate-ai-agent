@@ -60,8 +60,7 @@ try {
               "zipCodes": [ "zipCode" ]
             }
           - Pass the crafted object to the 'fetch_listings' tool.
-          - Store the fetched listings as a JSON array.
-          - Output the listings and return the JSON array.
+          - Immediately return the tool response without any additional reasoning.
 
           STOP IMMEDIATELY after returning this JSON.
           Do not execute any further steps.
