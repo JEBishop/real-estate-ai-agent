@@ -24,7 +24,7 @@ if(!OPENAI_API_KEY || OPENAI_API_KEY.length == 0) {
 
 const agentModel = new ChatOpenAI({ 
   apiKey: llmAPIKey,
-  modelName: "gpt-4o-mini",  
+  modelName: "gpt-4o",  
 }).bind({
   response_format: { type: "json_object" },
   tools: agentTools
@@ -40,34 +40,44 @@ try {
     {
       messages: [
         new HumanMessage(`
-          You are an expert real estate agent. You are being tasked with helping a client find a new place to live.
+          You are an expert real estate agent. You are tasked with helping a client find a new place to live.
 
-          STEP 1: Determine the 1-3 zip codes to search within from the user's request: ${realEstateRequest}
+          STEP 1: Determine the 1-3 zip codes to search within from the user's request: ${realEstateRequest}.
           - The user may provide a city, state, or a zip code.
           - If a zip code is provided, use it directly.
-          - If only a city and state are provided, determine the most relevant zip codes based on market demand, availability, or other key factors.
-          - Store this value as 'zipCode' for the next step.
-          - Do NOT output anything.
+          - If only a city and state are provided, determine the zip codes for the city based on your general knowledge.
+          - Store this as 'zipCodes' for the next step.
 
-          STEP 2: Fetch Listings (EXECUTE ONLY ONCE)
-          - Use the extracted 'zipCode' from Step 1 to craft an object with this structure:
-            {
-              "forRent": boolean,
-              "forSaleByAgent": boolean,
-              "forSaleByOwner": boolean,
-              "priceMax": number,
-              "sold": boolean,
-              "zipCodes": [ "zipCode" ]
-            }
+          STEP 2: Fetch Listings
+          - Use the extracted 'zipCodes' from Step 1 to craft an object with this structure:
+          {
+            "forRent": boolean,
+            "forSaleByAgent": boolean,
+            "forSaleByOwner": boolean,
+            "priceMax": number,
+            "sold": boolean,
+            "zipCodes": ["zipCode1", "zipCode2", ...]
+          }
+          - The boolean and number values should be determined from the user's ${realEstateRequest}.
           - Pass the crafted object to the 'fetch_listings' tool.
-          - Immediately return the tool response without any additional reasoning.
+          - Store the results for filtering in Step 3.
 
-          STOP IMMEDIATELY after returning this JSON.
-          Do not execute any further steps.
+          STEP 3: Filter Results Based on User Requirements
+          - Parse the user's ${realEstateRequest} for specific requirements like:
+            * Number of bedrooms/bathrooms
+            * Square footage
+            * Property type (house, apartment, condo)
+            * Amenities (pool, garage, etc.)
+            * Distance to locations (schools, work, etc.)
+          - Filter the listings from Step 2 to match at least one of these requirements.
+          - Add a field "match_reason" to each listing where you will describe why the listing was included
+          - If no specific filters are mentioned, return all listings from Step 2.
+          - If no listings meet the specified filters, return the first 5 listings Step 2.
 
-          STOP_CONDITION = Once JSON from STEP 2 is returned, the process must end.
-          `
-        )
+          STEP 4: Return Filtered Results as JSON
+          - Format the filtered listings as a JSON array of objects.
+          - Return this JSON without additional commentary.
+        `)
       ]
     }, {
       recursionLimit: 10
@@ -84,7 +94,7 @@ try {
     try {
       const parsedContent = JSON.parse(content) as MessageContentComplex[];
       if (typeof parsedContent === 'object' && parsedContent !== null && !Array.isArray(parsedContent)) {
-        const possibleKeys = ['input', 'output', 'result', 'results', 'response', 'listings', 'homes', 'rentals', 'houses'];
+        const possibleKeys = ['input', 'output', 'result', 'results', 'response', 'listings', 'homes', 'rentals', 'houses', 'filteredListings', 'filteredHomes', 'filteredRentals', 'filteredHouses'];
         
         const matchingKey = possibleKeys.find(key => key in parsedContent as any);
         

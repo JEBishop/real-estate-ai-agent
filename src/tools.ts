@@ -20,8 +20,12 @@ class FetchListingsTool extends Tool {
         const { items: listings } = await client.dataset(run.defaultDatasetId).listItems();
         
         console.log(`Found ${listings.length} listings.`);
-        
-        return JSON.stringify({ listings: listings });
+        /**
+         * If we send too many listings to the model it will get rate-limited.
+         * Extract the first 20.
+         * These are the 20 most relevant according to Zillow.)
+         */
+        return JSON.stringify({ listings: listings.slice(0,20) });
     } catch (err: any) {
         console.log(err.message);
         return JSON.stringify([]);
