@@ -1,0 +1,21 @@
+{
+    "title": "Newsletter AI Agent",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "realEstateRequest": {
+            "title": "Real Estate Request",
+            "type": "string",
+            "description": "Your real estate request",
+            "editor": "textfield",
+            "prefill": "Searching for a 2-bedroom apartment in San Francisco, CA, with a monthly rent between $2000 and $4000, and preferably featuring amenities such as parking and a gym."
+        },
+        "OPENAI_API_KEY": {
+            "title": "OpenAI API Key",
+            "type": "string",
+            "description": "The API key to use for prompting ChatGPT.",
+            "editor": "textfield"
+        }
+    },
+    "required": ["realEstateRequest"]
+}
