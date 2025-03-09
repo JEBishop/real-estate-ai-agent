@@ -36,8 +36,7 @@ const fetchListingsTool = tool(
         log.info(`Found ${listings.length} listings.`);
         /**
          * If we send too many listings to the model it will get rate-limited.
-         * Extract the first 20.
-         * These are the 20 most relevant according to Zillow.
+         * Extract the 20 most relevant according to Zillow (first results).
          */
         return JSON.stringify(listings.slice(0,20));
       } catch (err: any) {
