@@ -1,9 +1,13 @@
 import { Actor } from 'apify';
+import log from '@apify/log';
 import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, MessageContentComplex } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
-import type { Input } from './types.js'
+import type { Input, RealEstateListingOutput } from './types.js'
+import { responseSchema } from './types.js'
 import { agentTools } from './tools.js'
+import { setContextVariable } from "@langchain/core/context";
+import { RunnableLambda } from "@langchain/core/runnables";
 
 await Actor.init();
 
@@ -24,7 +28,7 @@ if(!OPENAI_API_KEY || OPENAI_API_KEY.length == 0) {
 
 const agentModel = new ChatOpenAI({ 
   apiKey: llmAPIKey,
-  modelName: "gpt-4o",  
+  modelName: "gpt-4o-mini",  
 }).bind({
   response_format: { type: "json_object" },
   tools: agentTools
@@ -32,93 +36,62 @@ const agentModel = new ChatOpenAI({
 
 const agent = createReactAgent({
   llm: agentModel,
-  tools: agentTools
+  tools: agentTools,
+  responseFormat: responseSchema
 });
 
 try {
-  const finalState = await agent.invoke(
-    {
-      messages: [
-        new HumanMessage(`
+  const handleRunTimeRequestRunnable = RunnableLambda.from(
+    async ({ realEstateRequest: realEstateRequest }) => {
+      setContextVariable("realEstateRequest", realEstateRequest);
+      const modelResponse = await agent.invoke({
+        messages: [new HumanMessage(`
           You are an expert real estate agent. You are tasked with helping a client find a new place to live.
 
-          STEP 1: Determine the 1-3 zip codes to search within from the user's request: ${realEstateRequest}.
+          STEP 1: Determine zip codes
+          - Using the extract_zip_codes tool, determine 1-3 zip codes to search within from the user's request: ${realEstateRequest}.
           - The user may provide a city, state, or a zip code.
           - If a zip code is provided, use it directly.
           - If only a city and state are provided, determine the zip codes for the city based on your general knowledge.
-          - Store this as 'zipCodes' for the next step.
+          - Store these zip codes in an array for Step 2.
 
           STEP 2: Fetch Listings
-          - Use the extracted 'zipCodes' from Step 1 to craft an object with this structure:
-          {
-            "forRent": boolean,
-            "forSaleByAgent": boolean,
-            "forSaleByOwner": boolean,
-            "priceMax": number,
-            "sold": boolean,
-            "zipCodes": ["zipCode1", "zipCode2", ...]
-          }
-          - The boolean and number values should be determined from the user's ${realEstateRequest}.
-          - Pass the crafted object to the 'fetch_listings' tool.
-          - Store the results for filtering in Step 3.
+          - !IMPORTANT! fetch_listings should only be called more than once if there was an error returned from the previous call.
+          - Call the fetch_listings tool, passing the entire array of zip codes from Step 1.
+          - The fetch_listings tool accepts multiple zip codes in a single call.
 
           STEP 3: Filter Results Based on User Requirements
           - Parse the user's ${realEstateRequest} for specific requirements like:
-            * Number of bedrooms/bathrooms
-            * Square footage
-            * Property type (house, apartment, condo)
-            * Amenities (pool, garage, etc.)
-            * Distance to locations (schools, work, etc.)
-          - Filter the listings from Step 2 to match at least one of these requirements.
-          - Add a field "match_reason" to each listing where you will describe why the listing was included
-          - If no specific filters are mentioned, return all listings from Step 2.
-          - If no listings meet the specified filters, return the first 5 listings Step 2.
+            * Budget/price range (keywords: afford, budget, price, cost, $)
+            * Bedrooms (keywords: bed, bedroom, BR)
+            * Bathrooms (keywords: bath, bathroom, BA)
+            * Property type (keywords: house, apartment, condo, townhouse)
+            * Square footage (keywords: square feet, sq ft, size, space)
+            * Amenities (keywords: pool, garage, yard, parking, pet)
+            * Location preferences (keywords: near, close to, walking distance)
+          - For each filtered listing, add a "match_reason" field with a brief explanation:
+          - If no filters can be identified OR no listings match filters:
+            * If no filters found: keep all listings and set match_reason to "Matches your search area"
+            * If no matches: take the first 5 listings and set match_reason to "Close to your search criteria"
 
           STEP 4: Return Filtered Results as JSON
-          - Format the filtered listings as a JSON array of objects.
-          - Return this JSON without additional commentary.
-        `)
-      ]
-    }, {
-      recursionLimit: 10
+          - Format the filtered listings as a JSON array of listing objects.
+          - Immediately return this JSON array and stop any further processing.
+      `)]
+      }, {
+        recursionLimit: 10
+      });
+      return modelResponse.structuredResponse as RealEstateListingOutput;
     }
   );
 
-  var content = finalState.messages[finalState.messages.length - 1].content;
-  /**
-   * Some GPT models will wrap the output array in an object, despite response formatting and strict prompting.
-   * Ex: { "results": [<< our data array >>] }
-   * Need to handle these edge cases gracefully in order to guarantee consistent output for users.
-   */
-  if (typeof content === 'string') {
-    try {
-      const parsedContent = JSON.parse(content) as MessageContentComplex[];
-      if (typeof parsedContent === 'object' && parsedContent !== null && !Array.isArray(parsedContent)) {
-        const possibleKeys = ['input', 'output', 'result', 'results', 'response', 'listings', 'homes', 'rentals', 'houses', 'filteredListings', 'filteredHomes', 'filteredRentals', 'filteredHouses'];
-        
-        const matchingKey = possibleKeys.find(key => key in parsedContent as any);
-        
-        if (matchingKey) {
-          content = (parsedContent as any)[matchingKey];
-        } else {
-          content = parsedContent;
-        }
-      } else {
-        content = parsedContent; 
-      }
-    } catch (error) {
-      console.error("Failed to parse JSON:", error);
-    }
-  }
-  const output = Array.isArray(content) ? content: [content];
+  const output: RealEstateListingOutput = await handleRunTimeRequestRunnable.invoke({ realEstateRequest: realEstateRequest });
 
-  console.log(output)
+  log.info(JSON.stringify(output.listings));
 
-  await Actor.charge({ eventName: 'listings-output', count: output.length });
-
-  await Actor.pushData(output);
-} catch (e: any) {
-  console.log(e);
-  await Actor.pushData({ error: e.message });
+  await Actor.pushData(output.listings);
+} catch (err: any) {
+  log.error(err.message);
+  await Actor.pushData({ error: err.message });
 }
 await Actor.exit();

@@ -1,37 +1,90 @@
-import { z } from 'zod';
-
-export interface NewsFeed {
-    name: string;
-    url: string;
-    source: string;
-}
-
-export const NewsFeedZod = z.object({
-  name: z.string(),
-  url: z.string(),
-  source: z.string(),
-});
-
-export interface SearchQuery {
-  query: string;
-}
-
-export const SearchQueryZod = z.object({
-  query: z.string()
-});
-
-export interface NewsStory {
-  title: string,
-  link: string,
-  summary: string,
-  source: string
-}
-
-export const NewsStoryZod = z.object({
-  aggregate: z.string()
-})
-
 export interface Input {
   realEstateRequest: string;
   OPENAI_API_KEY: string;
+}
+
+export interface RealEstateListingOutput {
+  listings: RealEstateListing[];
+}
+
+export interface RealEstateListing {
+  id: string;
+  detailUrl: string;
+  price: string;
+  address: string;
+  bedrooms: number;
+  bathrooms: number;
+  homeType: string;
+  area: number;
+  latLong: {
+    latitude: number;
+    longitude: number;
+  };
+  match_reason: string;
+}
+
+export const responseSchema = {
+  type: "object",
+  properties: {
+    listings: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            description: "Unique identifier for the rental listing"
+          },
+          detailUrl: {
+            type: "string",
+            description: "URL to the detailed listing page"
+          },
+          price: {
+            type: "string",
+            description: "Rental price formatted as string (e.g. '$1,985/mo')"
+          },
+          address: {
+            type: "string",
+            description: "Full address of the property"
+          },
+          bedrooms: {
+            type: "number",
+            description: "Number of bedrooms (0 for studio)"
+          },
+          bathrooms: {
+            type: "number",
+            description: "Number of bathrooms"
+          },
+          homeType: {
+            type: "string",
+            description: "Type of residence (e.g. 'APARTMENT', 'HOUSE')"
+          },
+          area: {
+            type: "number",
+            description: "Square footage of the property"
+          },
+          latLong: {
+            type: "object",
+            properties: {
+              latitude: {
+                type: "number",
+                description: "Latitude coordinate"
+              },
+              longitude: {
+                type: "number",
+                description: "Longitude coordinate"
+              }
+            },
+            required: ["latitude", "longitude"]
+          },
+          match_reason: {
+            type: "string",
+            description: "Explanation of why this listing matches search criteria"
+          }
+        },
+        required: ["id", "detailUrl", "price", "address", "bedrooms", "bathrooms", "homeType", "area", "latLong", "match_reason"]
+      }
+    }
+  },
+  required: ["listings"]
 }
