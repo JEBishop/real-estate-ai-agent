@@ -30,15 +30,11 @@ const fetchListingsTool = tool(
       log.info(JSON.stringify(input));
       try {
         // maxcopell/zillow-zip-search
-        const run = await client.actor('l7auNT3I30CssRrvO').call(input);
+        const run = await client.actor('l7auNT3I30CssRrvO').call(input, { maxItems: 20 });
         const { items: listings } = await client.dataset(run.defaultDatasetId).listItems();
         
         log.info(`Found ${listings.length} listings.`);
-        /**
-         * If we send too many listings to the model it will get rate-limited.
-         * Extract the 20 most relevant according to Zillow (first results).
-         */
-        return JSON.stringify(listings.slice(0,20));
+        return JSON.stringify(listings);
       } catch (err: any) {
         log.error('fetch_listings error: ' + err.message);
         return JSON.stringify({ error: err.message });

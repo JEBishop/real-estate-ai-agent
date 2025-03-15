@@ -10,16 +10,13 @@ export interface RealEstateListingOutput {
 export interface RealEstateListing {
   id: string;
   detailUrl: string;
+  imgSrc?: string;
   price: string;
   address: string;
   bedrooms: number;
   bathrooms: number;
   homeType: string;
   area: number;
-  latLong: {
-    latitude: number;
-    longitude: number;
-  };
   match_reason: string;
 }
 
@@ -34,6 +31,9 @@ export const responseSchema = {
           id: {
             type: "string",
             description: "Unique identifier for the rental listing"
+          },
+          imgSrc: {
+            type: "string"
           },
           detailUrl: {
             type: "string",
@@ -63,26 +63,12 @@ export const responseSchema = {
             type: "number",
             description: "Square footage of the property"
           },
-          latLong: {
-            type: "object",
-            properties: {
-              latitude: {
-                type: "number",
-                description: "Latitude coordinate"
-              },
-              longitude: {
-                type: "number",
-                description: "Longitude coordinate"
-              }
-            },
-            required: ["latitude", "longitude"]
-          },
           match_reason: {
             type: "string",
             description: "Explanation of why this listing matches search criteria"
           }
         },
-        required: ["id", "detailUrl", "price", "address", "bedrooms", "bathrooms", "homeType", "area", "latLong", "match_reason"]
+        required: ["id", "detailUrl", "price", "address", "bedrooms", "bathrooms", "homeType", "area", "match_reason"]
       }
     }
   },

@@ -8,6 +8,7 @@ import { responseSchema } from './types.js'
 import { agentTools } from './tools.js'
 import { setContextVariable } from "@langchain/core/context";
 import { RunnableLambda } from "@langchain/core/runnables";
+import { formatHtml } from './utils.js';
 
 await Actor.init();
 
@@ -87,9 +88,15 @@ try {
 
   const output: RealEstateListingOutput = await handleRunTimeRequestRunnable.invoke({ realEstateRequest: realEstateRequest });
 
+  const formattedOutput = {
+    //markdown: formatMarkdown(output),
+    html: formatHtml(output.listings),
+    json: output.listings
+  }
+
   log.info(JSON.stringify(output.listings));
 
-  await Actor.pushData(output.listings);
+  await Actor.pushData(formattedOutput);
 } catch (err: any) {
   log.error(err.message);
   await Actor.pushData({ error: err.message });
