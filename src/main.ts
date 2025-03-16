@@ -87,6 +87,7 @@ try {
   );
 
   const output: RealEstateListingOutput = await handleRunTimeRequestRunnable.invoke({ realEstateRequest: realEstateRequest });
+  await Actor.charge({ eventName: 'listings-output', count: output.listings.length });
 
   const formattedOutput = {
     //markdown: formatMarkdown(output),
