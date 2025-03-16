@@ -1,12 +1,10 @@
 import type { RealEstateListing } from './types.js';
 
 export const formatHtml = (listings: RealEstateListing[]) => {
-    console.log('format')
-    console.log(listings)
     return `<!DOCTYPE html>
 <html>
 <head>
-    <title>Apartment Listings</title>
+    <title>Real Estate Listings</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
         .grid-container { 
@@ -42,14 +40,3 @@ export const formatHtml = (listings: RealEstateListing[]) => {
 </body>
 </html>`.replace(/\s+/g, ' ').trim();
 }
-
-
-// export const formatMarkdown = (listings: RealEstateListing[]) => {
-//     return `# Apartment Listing\n\n` +
-//            `![Apartment Image](${apartment.imgSrc})\n\n` +
-//            `## [${apartment.address}](${apartment.detailUrl})\n\n` +
-//            `**Price:** ${apartment.price}\n\n` +
-//            `**Bedrooms:** ${apartment.bedrooms} | **Bathrooms:** ${apartment.bathrooms} | **Area:** ${apartment.area} sqft\n\n` +
-//            `**Type:** ${apartment.homeType}\n\n` +
-//            `**Match Reason:** ${apartment.match_reason}\n\n`;
-// }
