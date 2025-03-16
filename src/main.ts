@@ -89,15 +89,11 @@ try {
   const output: RealEstateListingOutput = await handleRunTimeRequestRunnable.invoke({ realEstateRequest: realEstateRequest });
   await Actor.charge({ eventName: 'listings-output', count: output.listings.length });
 
-  const formattedOutput = {
-    //markdown: formatMarkdown(output),
-    html: formatHtml(output.listings),
-    json: output.listings
-  }
+  await Actor.setValue('real_estate_report.html', formatHtml(output.listings), { contentType: 'text/html' });
 
-  log.info(JSON.stringify(output.listings));
+  log.info(JSON.stringify(output));
 
-  await Actor.pushData(formattedOutput);
+  await Actor.pushData(output);
 } catch (err: any) {
   log.error(err.message);
   await Actor.pushData({ error: err.message });

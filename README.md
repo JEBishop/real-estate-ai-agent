@@ -30,6 +30,7 @@ The **Real Estate Search Assistant** is an autonomous AI agent built on Apify th
 ```
 
 ## Example Output Format
+### Be sure to check the "Storage > Key-value store output tab for the HTML/MD report files.
 ![Sample HTML report](html_report.png)
 ```json
 {
