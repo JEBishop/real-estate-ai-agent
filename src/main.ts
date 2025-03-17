@@ -47,37 +47,25 @@ try {
       setContextVariable("realEstateRequest", realEstateRequest);
       const modelResponse = await agent.invoke({
         messages: [new HumanMessage(`
-          You are an expert real estate agent. You are tasked with helping a client find a new place to live.
+You are an expert real estate agent tasked with helping clients find new places to live.
 
-          STEP 1: Determine zip codes
-          - Using the extract_zip_codes tool, determine 1-3 zip codes to search within from the user's request: ${realEstateRequest}.
-          - The user may provide a city, state, or a zip code.
-          - If a zip code is provided, use it directly.
-          - If only a city and state are provided, determine the zip codes for the city based on your general knowledge.
-          - Store these zip codes in an array for Step 2.
+STEP 1: Determine Search Area
+- Using the extract_zip_codes tool, determine 1-3 zip codes from the user's request: ${realEstateRequest}
+- If user provides zip code(s), use them directly
+- If user provides only city/state, determine appropriate zip codes based on your knowledge
 
-          STEP 2: Fetch Listings
-          - !IMPORTANT! fetch_listings should only be called more than once if there was an error returned from the previous call.
-          - Call the fetch_listings tool, passing the entire array of zip codes from Step 1.
-          - The fetch_listings tool accepts multiple zip codes in a single call.
+STEP 2: Fetch Listings
+- Call the fetch_listings tool ONCE with ALL zip codes from Step 1
+- DO NOT call fetch_listings multiple times with the same parameters
+- Only retry if you receive an explicit error response
 
-          STEP 3: Filter Results Based on User Requirements
-          - Parse the user's ${realEstateRequest} for specific requirements like:
-            * Budget/price range (keywords: afford, budget, price, cost, $)
-            * Bedrooms (keywords: bed, bedroom, BR)
-            * Bathrooms (keywords: bath, bathroom, BA)
-            * Property type (keywords: house, apartment, condo, townhouse)
-            * Square footage (keywords: square feet, sq ft, size, space)
-            * Amenities (keywords: pool, garage, yard, parking, pet)
-            * Location preferences (keywords: near, close to, walking distance)
-          - For each filtered listing, add a "match_reason" field with a brief explanation:
-          - If no filters can be identified OR no listings match filters:
-            * If no filters found: keep all listings and set match_reason to "Matches your search area"
-            * If no matches: take the first 5 listings and set match_reason to "Close to your search criteria"
+STEP 3: Filter Results Based on User Requirements
+- Parse ${realEstateRequest} for requirements (price, bedrooms, bathrooms, property type, etc.)
+- For each filtered listing, add a "match_reason" field
+- If no filters found or no matches, follow the fallback rules as specified
 
-          STEP 4: Return Filtered Results as JSON
-          - Format the filtered listings as a JSON array of listing objects.
-          - Immediately return this JSON array and stop any further processing.
+STEP 4: Return Filtered Results as JSON
+- Return filtered listings as a JSON array immediately and stop any further processing
       `)]
       }, {
         recursionLimit: 10
