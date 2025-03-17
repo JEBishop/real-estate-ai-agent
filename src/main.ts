@@ -47,25 +47,24 @@ try {
       setContextVariable("realEstateRequest", realEstateRequest);
       const modelResponse = await agent.invoke({
         messages: [new HumanMessage(`
-You are an expert real estate agent tasked with helping clients find new places to live.
+          You are an expert real estate agent tasked with helping clients find new places to live.
 
-STEP 1: Determine Search Area
-- Using the extract_zip_codes tool, determine 1-3 zip codes from the user's request: ${realEstateRequest}
-- If user provides zip code(s), use them directly
-- If user provides only city/state, determine appropriate zip codes based on your knowledge
+          STEP 1: Determine Search Area
+          - Using the extract_zip_codes tool, determine 1-3 zip codes from the user's request: ${realEstateRequest}
+          - If user provides zip code(s), use them directly
+          - If user provides only city/state, determine appropriate zip codes based on your knowledge
 
-STEP 2: Fetch Listings
-- Call the fetch_listings tool ONCE with ALL zip codes from Step 1
-- DO NOT call fetch_listings multiple times with the same parameters
-- Only retry if you receive an explicit error response
+          STEP 2: Fetch Listings
+          - Call the fetch_listings tool ONCE with ALL zip codes from Step 1
+          - DO NOT call fetch_listings multiple times with the same parameters
+          - Only retry if you receive an explicit error response
 
-STEP 3: Filter Results Based on User Requirements
-- Parse ${realEstateRequest} for requirements (price, bedrooms, bathrooms, property type, etc.)
-- For each filtered listing, add a "match_reason" field
-- If no filters found or no matches, follow the fallback rules as specified
+          STEP 3: Filter Results Based on User Requirements
+          - Parse ${realEstateRequest} for requirements (price, bedrooms, bathrooms, property type, location, etc.)
+          - For each filtered listing, add a "match_reason" field
 
-STEP 4: Return Filtered Results as JSON
-- Return filtered listings as a JSON array immediately and stop any further processing
+          STEP 4: Return Filtered Results as JSON
+          - Return filtered listings as a JSON array immediately and stop any further processing
       `)]
       }, {
         recursionLimit: 10

@@ -10,7 +10,7 @@ The **Real Estate Search Assistant** is an autonomous AI agent built on Apify th
 - **Multi-Format Reporting**: Outputs search results in Markdown, HTML, and JSON formats for flexibility.
 
 ## Workflow
-![Agent workflow diagram](agent_flow.png)
+![Agent workflow diagram](https://raw.githubusercontent.com/JEBishop/real-estate-ai-agent/main/agent_flow.png)
 1. **User Input Processing**: Extracts key search parameters such as location, budget, number of bedrooms, and amenities.
 2. **Web Scraping**: Asynchronously scrapes real estate listing websites for matching properties.
 3. **Data Filtering & Processing**: Sorts and filters listings based on relevance.
@@ -31,7 +31,7 @@ The **Real Estate Search Assistant** is an autonomous AI agent built on Apify th
 
 ## Example Output Format
 ### Be sure to check the "Storage > Key-value store output tab for the HTML/MD report files.
-![Sample HTML report](html_report.png)
+![Sample HTML report](https://raw.githubusercontent.com/JEBishop/real-estate-ai-agent/main/html_report.png)
 ```json
 {
   "markdown": "# Rental Listings in San Francisco, CA\n## 1. Modern 2-Bedroom Apartment\n- **Price**: $3,200/month\n- **Location**: Downtown SF\n- **Amenities**: Parking, Gym, Pool\n- [View Listing](example.com/listing1)",
